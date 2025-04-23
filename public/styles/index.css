@@ -74,3 +74,55 @@ body {
 .logo i {
   font-size: 1.8em;
 }
+
+/* Responsividade */
+@media (max-width: 992px) {
+  .lobby-content,
+  .game-content {
+    flex-direction: column;
+  }
+
+  .game-stats-section,
+  .chat-area {
+    margin-top: 20px;
+  }
+
+  .characters-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .characters-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .game-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .lobby-container header,
+  .game-container header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+
+  .user-info {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
+@media (max-width: 576px) {
+  .characters-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .user-stats {
+    flex-direction: column;
+    gap: 5px;
+  }
+}
