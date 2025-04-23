@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cara-a-Cara - Redirecionando</title>
+    <link rel="stylesheet" href="styles.css" />
+    <style>
+      .redirect-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        text-align: center;
+      }
+      .logo {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--primary-color);
+        margin-bottom: 20px;
+      }
+      .logo i {
+        font-size: 2.5em;
+      }
+    </style>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+  </head>
+  <body>
+    <div class="redirect-container">
+      <div class="logo">
+        <i class="fas fa-users"></i>
+        <h1>Cara-a-Cara</h1>
+      </div>
+      <p>Redirecionando...</p>
+    </div>
+
+    <script>
+      // Verificar se o usuário está logado e redirecionar para a página apropriada
+      document.addEventListener("DOMContentLoaded", async () => {
+        try {
+          const response = await fetch("/api/user");
+
+          if (response.ok) {
+            // Usuário está logado, redirecionar para o lobby
+            window.location.href = "lobby.html";
+          } else {
+            // Usuário não está logado, redirecionar para a página de login
+            // window.location.href = 'login.html';
+          }
+        } catch (error) {
+          console.error("Erro ao verificar status de autenticação:", error);
+          // Em caso de erro, redirecionar para a página de login
+          //   window.location.href = "login.html";
+        }
+      });
+    </script>
+  </body>
+</html>

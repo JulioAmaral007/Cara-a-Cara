@@ -1,0 +1,29 @@
+{
+  "name": "cara-a-cara-t1",
+  "version": "1.0.0",
+  "main": "server.js",
+  "scripts": {
+    "dev": "node --watch server.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "npx @biomejs/biome lint ./",
+    "lint-ap ply": "npx @biomejs/biome lint ./ --apply",
+    "format": "npx @biomejs/biome format ./",
+    "format-apply": "npx @biomejs/biome format ./ --write",
+    "check": "npx @biomejs/biome check ./",
+    "check-apply": "npx @biomejs/biome check ./ --apply"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "express": "^5.1.0",
+    "express-session": "^1.18.1",
+    "mongodb": "^6.16.0",
+    "mongoose": "^8.13.2"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4"
+  }
+}

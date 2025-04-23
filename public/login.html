@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cara-a-Cara - Login</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div id="login-screen" class="screen active">
+        <div class="auth-container">
+            <div class="logo">
+                <i class="fas fa-users"></i>
+                <h1>Cara-a-Cara</h1>
+            </div>
+            
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="login">Entrar</button>
+                <button class="tab-btn" data-tab="register">Registrar</button>
+            </div>
+            
+            <div id="login-tab" class="tab-content active">
+                <form id="login-form">
+                    <div class="form-group">
+                        <label for="login-username">
+                            <i class="fas fa-user"></i> Usuário
+                        </label>
+                        <input type="text" id="login-username" placeholder="Digite seu nome de usuário" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="login-password">
+                            <i class="fas fa-lock"></i> Senha
+                        </label>
+                        <input type="password" id="login-password" placeholder="Digite sua senha" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-sign-in-alt"></i> Entrar
+                    </button>
+                </form>
+            </div>
+            
+            <div id="register-tab" class="tab-content">
+                <form id="register-form">
+                    <div class="form-group">
+                        <label for="register-username">
+                            <i class="fas fa-user"></i> Usuário
+                        </label>
+                        <input type="text" id="register-username" placeholder="Escolha um nome de usuário" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="register-password">
+                            <i class="fas fa-lock"></i> Senha
+                        </label>
+                        <input type="password" id="register-password" placeholder="Crie uma senha" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="register-confirm-password">
+                            <i class="fas fa-lock"></i> Confirmar Senha
+                        </label>
+                        <input type="password" id="register-confirm-password" placeholder="Confirme sua senha" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-user-plus"></i> Registrar
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/login.js"></script>
+</body>
+</html>
