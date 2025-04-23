@@ -1,0 +1,234 @@
+.lobby-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  background-color: white;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+  padding: 20px;
+  height: calc(100vh - 40px);
+  display: flex;
+  flex-direction: column;
+}
+
+.lobby-container header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.user-avatar i {
+  font-size: 2.5em;
+  color: var(--primary-color);
+}
+
+.user-details {
+  display: flex;
+  flex-direction: column;
+}
+
+#user-display-name {
+  font-weight: 600;
+  font-size: 1.2em;
+}
+
+.user-stats {
+  display: flex;
+  gap: 15px;
+  color: var(--text-light);
+  font-size: 0.9em;
+}
+
+.lobby-content {
+  display: flex;
+  gap: 20px;
+  flex: 1;
+  overflow: hidden;
+}
+
+.online-players-section {
+  flex: 2;
+  display: flex;
+  flex-direction: column;
+}
+
+.game-stats-section {
+  flex: 1;
+  background-color: var(--secondary-color);
+  border-radius: var(--border-radius);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.section-header h2 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--primary-color);
+}
+
+.players-list-container {
+  flex: 1;
+  background-color: var(--secondary-color);
+  border-radius: var(--border-radius);
+  padding: 15px;
+  overflow-y: auto;
+}
+
+#players-list {
+  list-style: none;
+}
+
+#players-list li {
+  padding: 15px;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: background-color 0.3s ease;
+}
+
+#players-list li:last-child {
+  border-bottom: none;
+}
+
+#players-list li:hover {
+  background-color: rgba(74, 109, 167, 0.1);
+  cursor: pointer;
+}
+
+.player-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.player-avatar i {
+  font-size: 1.5em;
+  color: var(--primary-color);
+}
+
+.player-name {
+  font-weight: 600;
+}
+
+.player-victories {
+  color: var(--text-light);
+  font-size: 0.9em;
+}
+
+.play-button {
+  background-color: var(--success-color);
+  color: white;
+  padding: 6px 12px;
+  border-radius: var(--border-radius);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.play-button:hover {
+  background-color: #3d8b40;
+}
+
+#no-players-message {
+  text-align: center;
+  padding: 30px 0;
+  color: var(--text-light);
+}
+
+.stats-container {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-top: 15px;
+}
+
+.stat-card {
+  background-color: white;
+  border-radius: var(--border-radius);
+  padding: 15px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  box-shadow: var(--shadow);
+}
+
+.stat-icon {
+  width: 50px;
+  height: 50px;
+  background-color: var(--primary-light);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary-color);
+  font-size: 1.5em;
+}
+
+.stat-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-value {
+  font-size: 1.5em;
+  font-weight: 600;
+}
+
+.stat-label {
+  color: var(--text-light);
+  font-size: 0.9em;
+}
+
+.player-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  border-radius: 12px;
+  background-color: #f9f9f9;
+}
+
+.player-avatar {
+  font-size: 32px;
+  margin-right: 10px;
+  color: #666;
+}
+
+.player-info {
+  flex-grow: 1;
+}
+
+.player-name {
+  font-weight: bold;
+  display: block;
+}
+
+.player-stats {
+  font-size: 0.85em;
+  color: #777;
+}
+
+.btn-challenge {
+  background-color: #ffc107;
+  color: #333;
+}
