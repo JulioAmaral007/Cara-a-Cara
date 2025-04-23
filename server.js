@@ -1,9 +1,9 @@
-const express = require("express")
-const mongoose = require("mongoose")
-const bcrypt = require("bcryptjs")
-const session = require("express-session")
-const path = require("path")
-const User = require("./models/User")
+const express = require('express')
+const mongoose = require('mongoose')
+const bcrypt = require('bcryptjs')
+const session = require('express-session')
+const path = require('path')
+const User = require('./models/User')
 
 const app = express()
 const PORT = process.env.PORT || 3000
@@ -20,7 +20,7 @@ const PORT = process.env.PORT || 3000
 // // Middleware
 // app.use(express.json())
 // app.use(express.urlencoded({ extended: true }))
-app.use(express.static(path.join(__dirname, "public")))
+app.use(express.static(path.join(__dirname, 'public/pages')))
 
 // // Session configuration
 // app.use(

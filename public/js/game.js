@@ -7,12 +7,12 @@ let isMyTurn = true
 let messages = []
 
 // Import necessary functions (assuming they are in separate files)
-import { checkAuthStatus } from "./auth.js"; // Adjust path as needed
-import { characters } from "./characters.js"; // Adjust path as needed
-import { clearGameDataFromStorage, getGameDataFromStorage } from "./storage.js"; // Adjust path as needed
+import { checkAuthStatus } from './auth.js' // Adjust path as needed
+import { characters } from './characters.js' // Adjust path as needed
+import { clearGameDataFromStorage, getGameDataFromStorage } from './storage.js' // Adjust path as needed
 
 // Inicializar a tela de jogo
-document.addEventListener("DOMContentLoaded", async () => {
+document.addEventListener('DOMContentLoaded', async () => {
   // Verificar se o usuário está logado
   const user = await checkAuthStatus()
 
@@ -46,30 +46,30 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 function setupEventListeners() {
   // Botão de sair do jogo
-  const leaveGameBtn = document.getElementById("leave-game-btn")
-  leaveGameBtn.addEventListener("click", leaveGame)
+  const leaveGameBtn = document.getElementById('leave-game-btn')
+  leaveGameBtn.addEventListener('click', leaveGame)
 
   // Botão de enviar mensagem
-  const sendMessageBtn = document.getElementById("send-message-btn")
-  sendMessageBtn.addEventListener("click", sendMessage)
+  const sendMessageBtn = document.getElementById('send-message-btn')
+  sendMessageBtn.addEventListener('click', sendMessage)
 
   // Input de mensagem (enviar com Enter)
-  const messageInput = document.getElementById("message-input")
-  messageInput.addEventListener("keypress", (e) => {
-    if (e.key === "Enter") {
+  const messageInput = document.getElementById('message-input')
+  messageInput.addEventListener('keypress', e => {
+    if (e.key === 'Enter') {
       sendMessage()
     }
   })
 
   // Botão de limpar chat
-  const clearChatBtn = document.getElementById("clear-chat-btn")
-  clearChatBtn.addEventListener("click", clearChat)
+  const clearChatBtn = document.getElementById('clear-chat-btn')
+  clearChatBtn.addEventListener('click', clearChat)
 }
 
 function updateOpponentInfo() {
   if (!currentOpponent) return
 
-  document.getElementById("opponent-name").textContent = currentOpponent.username
+  document.getElementById('opponent-name').textContent = currentOpponent.username
 }
 
 function setupGameBoard() {
@@ -77,19 +77,19 @@ function setupGameBoard() {
   secretCharacter = characters[Math.floor(Math.random() * characters.length)]
 
   // Exibir personagem secreto
-  const secretCharacterCard = document.getElementById("secret-character-card")
+  const secretCharacterCard = document.getElementById('secret-character-card')
   secretCharacterCard.innerHTML = `
     <img src="/placeholder.svg?height=200&width=150" alt="${secretCharacter.name}">
     <div class="character-name">${secretCharacter.name}</div>
   `
 
   // Preencher a grade de personagens
-  const charactersGrid = document.getElementById("characters-grid")
-  charactersGrid.innerHTML = ""
+  const charactersGrid = document.getElementById('characters-grid')
+  charactersGrid.innerHTML = ''
 
-  characters.forEach((character) => {
-    const card = document.createElement("div")
-    card.className = "character-card"
+  characters.forEach(character => {
+    const card = document.createElement('div')
+    card.className = 'character-card'
     card.dataset.id = character.id
 
     card.innerHTML = `
@@ -97,7 +97,7 @@ function setupGameBoard() {
       <div class="character-name">${character.name}</div>
     `
 
-    card.addEventListener("click", () => {
+    card.addEventListener('click', () => {
       toggleCharacterElimination(character.id)
     })
 
@@ -113,29 +113,29 @@ function toggleCharacterElimination(characterId) {
 
   if (eliminatedCharacters.includes(characterId)) {
     // Deseliminar personagem
-    eliminatedCharacters = eliminatedCharacters.filter((id) => id !== characterId)
-    card.classList.remove("eliminated")
+    eliminatedCharacters = eliminatedCharacters.filter(id => id !== characterId)
+    card.classList.remove('eliminated')
   } else {
     // Eliminar personagem
     eliminatedCharacters.push(characterId)
-    card.classList.add("eliminated")
+    card.classList.add('eliminated')
   }
 }
 
 function updateTurnIndicator() {
-  const turnIndicator = document.getElementById("turn-indicator")
+  const turnIndicator = document.getElementById('turn-indicator')
 
   if (isMyTurn) {
-    turnIndicator.className = "turn-indicator your-turn"
+    turnIndicator.className = 'turn-indicator your-turn'
     turnIndicator.innerHTML = `<i class="fas fa-play"></i> <span>Seu turno</span>`
   } else {
-    turnIndicator.className = "turn-indicator opponent-turn"
+    turnIndicator.className = 'turn-indicator opponent-turn'
     turnIndicator.innerHTML = `<i class="fas fa-pause"></i> <span>Turno do oponente</span>`
   }
 }
 
 function sendMessage() {
-  const messageInput = document.getElementById("message-input")
+  const messageInput = document.getElementById('message-input')
   const messageText = messageInput.value.trim()
 
   if (!messageText) return
@@ -148,7 +148,7 @@ function sendMessage() {
   })
 
   // Limpar input
-  messageInput.value = ""
+  messageInput.value = ''
 
   // Em um app real, você enviaria esta mensagem para o servidor via WebSockets
   // Para fins de demonstração, vamos simular uma resposta após um curto atraso
@@ -157,7 +157,14 @@ function sendMessage() {
 
   setTimeout(() => {
     // Simular resposta do oponente
-    const responses = ["Sim", "Não", "Talvez...", "Não tenho certeza", "Definitivamente sim", "Definitivamente não"]
+    const responses = [
+      'Sim',
+      'Não',
+      'Talvez...',
+      'Não tenho certeza',
+      'Definitivamente sim',
+      'Definitivamente não',
+    ]
 
     const randomResponse = responses[Math.floor(Math.random() * responses.length)]
 
@@ -175,9 +182,9 @@ function sendMessage() {
 function addMessage(message) {
   messages.push(message)
 
-  const messagesContainer = document.getElementById("messages-container")
-  const messageElement = document.createElement("div")
-  messageElement.className = `message ${message.isMine ? "sent" : "received"}`
+  const messagesContainer = document.getElementById('messages-container')
+  const messageElement = document.createElement('div')
+  messageElement.className = `message ${message.isMine ? 'sent' : 'received'}`
 
   messageElement.innerHTML = `
     <div class="message-sender">${message.sender}</div>
@@ -188,16 +195,16 @@ function addMessage(message) {
   messagesContainer.scrollTop = messagesContainer.scrollHeight
 
   // Verificar se a mensagem é um palpite
-  if (message.isMine && message.text.toLowerCase().includes("seu personagem é")) {
-    const guessedName = message.text.toLowerCase().replace("seu personagem é", "").trim()
+  if (message.isMine && message.text.toLowerCase().includes('seu personagem é')) {
+    const guessedName = message.text.toLowerCase().replace('seu personagem é', '').trim()
     const isCorrectGuess = Math.random() < 0.5 // 50% de chance de estar correto para demonstração
 
     setTimeout(() => {
       if (isCorrectGuess) {
-        alert("Parabéns! Você acertou e venceu o jogo!")
+        alert('Parabéns! Você acertou e venceu o jogo!')
         updateVictory()
       } else {
-        alert("Que pena! Você errou e perdeu o jogo.")
+        alert('Que pena! Você errou e perdeu o jogo.')
         updateLoss()
       }
 
@@ -207,7 +214,7 @@ function addMessage(message) {
 }
 
 function clearChat() {
-  const messagesContainer = document.getElementById("messages-container")
+  const messagesContainer = document.getElementById('messages-container')
   messagesContainer.innerHTML = `
     <div class="system-message">
       <p>Jogo iniciado! Faça perguntas que possam ser respondidas com SIM ou NÃO.</p>
@@ -227,28 +234,28 @@ function leaveGame() {
 
 async function updateVictory() {
   try {
-    const response = await fetch("/api/user/victory", {
-      method: "PUT",
+    const response = await fetch('/api/user/victory', {
+      method: 'PUT',
     })
 
     if (response.ok) {
       currentUser = await response.json()
     }
   } catch (error) {
-    console.error("Erro ao atualizar vitória:", error)
+    console.error('Erro ao atualizar vitória:', error)
   }
 }
 
 async function updateLoss() {
   try {
-    const response = await fetch("/api/user/loss", {
-      method: "PUT",
+    const response = await fetch('/api/user/loss', {
+      method: 'PUT',
     })
 
     if (response.ok) {
       currentUser = await response.json()
     }
   } catch (error) {
-    console.error("Erro ao atualizar derrota:", error)
+    console.error('Erro ao atualizar derrota:', error)
   }
 }
