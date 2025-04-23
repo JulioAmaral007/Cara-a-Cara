@@ -1,98 +1,95 @@
-function setupLoginRegisterTabs() {
+document.addEventListener('DOMContentLoaded', () => {
+  // Alternar entre abas (login e registro)
   const tabButtons = document.querySelectorAll('.tab-btn')
   const tabContents = document.querySelectorAll('.tab-content')
 
   tabButtons.forEach(button => {
     button.addEventListener('click', () => {
-      const tabName = button.getAttribute('data-tab')
-
-      // Atualizar botão da aba ativa
+      // Alterna botão ativo
       tabButtons.forEach(btn => btn.classList.remove('active'))
       button.classList.add('active')
 
-      // Mostrar o conteúdo da aba selecionada
-      tabContents.forEach(content => {
-        content.classList.remove('active')
-        if (content.id === `${tabName}-tab`) {
-          content.classList.add('active')
-        }
+      // Alterna conteúdo
+      const target = button.dataset.tab
+      tabContents.forEach(tab => {
+        tab.classList.remove('active')
+        if (tab.id === `${target}-tab`) tab.classList.add('active')
       })
     })
   })
-}
 
-function setupFormSubmissions() {
-  // Formulário de login
-  const loginForm = document.getElementById('login-form')
-  loginForm.addEventListener('submit', e => {
+  // Lógica do login
+  document.getElementById('login-form').addEventListener('submit', async e => {
     e.preventDefault()
 
-    const username = document.getElementById('login-username').value
-    const password = document.getElementById('login-password').value
+    const username = document.getElementById('login-username').value.trim()
+    const password = document.getElementById('login-password').value.trim()
 
-    loginUser(username, password)
-  })
-
-  // Formulário de registro
-  const registerForm = document.getElementById('register-form')
-  registerForm.addEventListener('submit', e => {
-    e.preventDefault()
-
-    const username = document.getElementById('register-username').value
-    const password = document.getElementById('register-password').value
-    const confirmPassword = document.getElementById('register-confirm-password').value
-
-    if (password !== confirmPassword) {
-      alert('As senhas não coincidem!')
+    if (!username || !password) {
+      alert('Por favor, preencha todos os campos.')
       return
     }
 
-    registerUser(username, password)
+    try {
+      // Exemplo de envio para API (substituir por sua URL real)
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      })
+
+      if (!response.ok) {
+        const { message } = await response.json()
+        alert(message || 'Usuário ou senha inválidos.')
+        return
+      }
+
+      // Redireciona para o lobby após login bem-sucedido
+      window.location.href = 'lobby.html'
+    } catch (error) {
+      console.error('Erro no login:', error)
+      alert('Erro ao tentar fazer login.')
+    }
   })
-}
 
-async function loginUser(username, password) {
-  try {
-    const response = await fetch('/api/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ username, password }),
-    })
+  // Lógica do registro
+  document.getElementById('register-form').addEventListener('submit', async e => {
+    e.preventDefault()
 
-    if (response.ok) {
-      // Redirecionar para o lobby após login bem-sucedido
-      window.location.href = 'lobby.html'
-    } else {
-      const error = await response.json()
-      alert(error.message || 'Falha no login. Verifique suas credenciais.')
+    const username = document.getElementById('register-username').value.trim()
+    const password = document.getElementById('register-password').value.trim()
+    const confirmPassword = document.getElementById('register-confirm-password').value.trim()
+
+    if (!username || !password || !confirmPassword) {
+      alert('Preencha todos os campos.')
+      return
     }
-  } catch (error) {
-    console.error('Erro de login:', error)
-    alert('Erro ao conectar com o servidor. Tente novamente mais tarde.')
-  }
-}
 
-async function registerUser(username, password) {
-  try {
-    const response = await fetch('/api/register', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ username, password }),
-    })
-
-    if (response.ok) {
-      // Redirecionar para o lobby após registro bem-sucedido
-      window.location.href = 'lobby.html'
-    } else {
-      const error = await response.json()
-      alert(error.message || 'Falha no registro. Tente outro nome de usuário.')
+    if (password !== confirmPassword) {
+      alert('As senhas não coincidem.')
+      return
     }
-  } catch (error) {
-    console.error('Erro de registro:', error)
-    alert('Erro ao conectar com o servidor. Tente novamente mais tarde.')
-  }
-}
+
+    try {
+      // Exemplo de envio para API (substituir por sua URL real)
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      })
+
+      if (!response.ok) {
+        const { message } = await response.json()
+        alert(message || 'Erro ao registrar.')
+        return
+      }
+
+      alert('Registro realizado com sucesso! Faça login.')
+      // Alterna para a aba de login
+      document.querySelector('[data-tab="login"]').click()
+    } catch (error) {
+      console.error('Erro no registro:', error)
+      alert('Erro ao tentar registrar.')
+    }
+  })
+})
