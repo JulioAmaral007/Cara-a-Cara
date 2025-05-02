@@ -14,7 +14,10 @@ require('dotenv').config()
 const app = express()
 app.use(express.json())
 app.use(express.static(__dirname + '/public'))
-app.use(cors())
+app.use(cors({
+  origin: 'https//localhost:3000',
+  credentials: true
+}));
 
 // Swagger config
 const swaggerOptions = {
@@ -118,7 +121,7 @@ mongoose
 app.use(session({
   secret: 'progwebt1',
   resave: false,
-  seveUnitialized: false,
+  seveUninitialized: false,
   store: mongostr.create({
     mongoUrl: 'mongodb://localhost:27017/cara-a-cara',
   }),
@@ -126,7 +129,7 @@ app.use(session({
 }));
 
 const requireAuth = (req, res, next) => {
-    if(!req.session.useId) {
+    if(!req.session.sessionId) {
       res.status(401).json({error: 'Not authenticated'});
       res.sendFile(_dirname + '/pages/login.html');
     } else next();
@@ -136,10 +139,9 @@ const requireAuth = (req, res, next) => {
 
 // Auth routes
 
-
 // route for registering
 app.post('/auth/register', async (req, res) => {
-  console.log(req.body)
+  console.log('Registering attempt:', req.body);
   try {
     const {username, password} = req.body;
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -196,7 +198,7 @@ app.post('/auth/login', async (req, res) => {
 })
 
 // route for logging out
-app.post('/auth/logout', (req, res) => {
+app.post('/auth/logout', requireAuth, (req, res) => {
   req.session.destroy(err => {
     if(err) return res.status(500).json({
       error: 'Internal server error, logout failed',
@@ -208,7 +210,7 @@ app.post('/auth/logout', (req, res) => {
 
 // Game routes
 
-app.post('/game/start', (req, res) => {
+app.post('/game/start', requireAuth, (req, res) => {
  try {
 
  } catch {
@@ -216,7 +218,7 @@ app.post('/game/start', (req, res) => {
  }
 });
 
-app.post('/game/:id', (req, res) => {
+app.post('/game/:id', requireAuth, (req, res) => {
   try {
 
   } catch {
@@ -226,7 +228,7 @@ app.post('/game/:id', (req, res) => {
 
 // Player routes
 
-app.get('/players/online', (req, res) => {
+app.get('/players/online', requireAuth, (req, res) => {
   try {
 
   } catch {
@@ -234,7 +236,7 @@ app.get('/players/online', (req, res) => {
   }
 });
 
-app.post('/player/:id', (req, res) => {
+app.post('/player/:id', requireAuth, (req, res) => {
   try {
 
   } catch {
@@ -242,7 +244,7 @@ app.post('/player/:id', (req, res) => {
   }
 });
 
-app.post('/player/stats', (req, res) => {
+app.post('/player/stats', requireAuth, (req, res) => {
   try {
 
   } catch {
