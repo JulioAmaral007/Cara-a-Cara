@@ -244,35 +244,41 @@ app.get('/game/:id', requireAuth, (req, res) => {
 
 app.get('/players/online', requireAuth, async (req, res) => {
   try {
-    let users = await User.find({isOnline: true}, {password: 0});
+    let users = await User.find(
+      {
+        isOnline: true
+      }, 
+      {
+        password: 0,
+        createdAt: 0,
+        updatedAt: 0,
+        lastActive: 0,
+        isOnline: 0,
+        _id: 0
+      }
+    );
     res.json(users);
   } catch (err) {
     res.status(500).json("Couldn't return online players");
   }
 });
 
-app.get('/player/:username', requireAuth, async (req, res) => {
-  try {
-    let user = await User.findOne(
-      {username: req.params.username},
-      {password: 0}
-    );
-    if(!user){
-      return res.status(404).json({error: "Player was no found"});
-    }
-    res.json(user);
-  } catch (err){
-    res.status(500).json({error: 'Server error', details: err.message});
-  }
-});
-
 app.get('/player/stats', requireAuth, async (req, res) => {
   try {
     let userId = req.session.userId;
+    //console.log('Session userId:', userId, 'Type:', typeof userId);
+
+    if(!mongoose.Types.ObjectId.isValid(userId)){
+      return res.status(400).json({
+        error: 'Invalid user ID format',
+        receiveId: userId
+      });
+    }
 
     let player = await User.findById(
       userId,
       {
+        username: 1,
         victories: 1,
         gamesPlayed: 1,
         _id: 0
@@ -280,19 +286,44 @@ app.get('/player/stats', requireAuth, async (req, res) => {
     );
 
     if(!player) {
-      return res.status(404).json({error: 'Player was not found'});
+      return res.status(404).json({
+        error: 'Player was not found',
+        debug: {
+          sessionUserId: userId
+        }
+      });
     }
 
-    res.json({
-      victories: player.victories,
-      gamesPlayed: player.gamesPlayed
-    });
+    res.json({player});
 
   } catch (err){
     res.status(500).json({
       error: 'Server error',
       details: err.message
     });
+  }
+});
+
+app.get('/player/:username', requireAuth, async (req, res) => {
+  try {
+    let user = await User.findOne(
+      {
+        username: req.params.username
+      },
+      {
+        password: 0,
+        createdAt: 0,
+        updatedAt: 0,
+        lastActive: 0,
+        _id: 0
+      }
+    );
+    if(!user){
+      return res.status(404).json({error: "Player was not found"});
+    }
+    res.json(user);
+  } catch (err){
+    res.status(500).json({error: 'Server error', details: err.message});
   }
 });
 
