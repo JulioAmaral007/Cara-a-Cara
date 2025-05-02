@@ -21,6 +21,9 @@ const GameSchema = new mongoose.Schema({
         type: String, 
         default: null
     }
-}, {timestamps: true});
+}, 
+{
+    timestamps: true
+});
 
 module.exports = mongoose.model('Game', GameSchema);

@@ -10,14 +10,15 @@
     "format": "npx @biomejs/biome format ./",
     "format-apply": "npx @biomejs/biome format ./ --write",
     "check": "npx @biomejs/biome check ./",
-    "check-apply": "npx @biomejs/biome check ./ --apply"
+    "check-apply": "npx @biomejs/biome check ./ --apply",
+    "start": "node server.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
   "dependencies": {
     "bcryptjs": "^3.0.2",
+    "connect-mongo": "^5.1.0",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "express-session": "^1.18.1",
@@ -27,5 +28,14 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JulioAmaral007/Cara-a-Cara.git"
+  },
+  "bugs": {
+    "url": "https://github.com/JulioAmaral007/Cara-a-Cara/issues"
+  },
+  "homepage": "https://github.com/JulioAmaral007/Cara-a-Cara#readme",
+  "description": ""
 }
