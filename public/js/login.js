@@ -22,8 +22,11 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('login-form').addEventListener('submit', async e => {
     e.preventDefault()
 
-    const username = document.getElementById('login-username').value.trim()
-    const password = document.getElementById('login-password').value.trim()
+    const usernameInput = document.getElementById('login-username')
+    const passwordInput = document.getElementById('login-password')
+
+    const username = usernameInput.value.trim()
+    const password = passwordInput.value.trim()
 
     if (!username || !password) {
       alert('Por favor, preencha todos os campos.')
@@ -31,8 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     try {
-      // Exemplo de envio para API (substituir por sua URL real)
-      const response = await fetch('/api/auth/login', {
+      const response = await fetch('/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
@@ -43,6 +45,10 @@ document.addEventListener('DOMContentLoaded', () => {
         alert(message || 'Usuário ou senha inválidos.')
         return
       }
+
+      // Limpa os campos do formulário
+      usernameInput.value = ''
+      passwordInput.value = ''
 
       // Redireciona para o lobby após login bem-sucedido
       window.location.href = 'lobby.html'
@@ -56,9 +62,13 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('register-form').addEventListener('submit', async e => {
     e.preventDefault()
 
-    const username = document.getElementById('register-username').value.trim()
-    const password = document.getElementById('register-password').value.trim()
-    const confirmPassword = document.getElementById('register-confirm-password').value.trim()
+    const usernameInput = document.getElementById('register-username')
+    const passwordInput = document.getElementById('register-password')
+    const confirmPasswordInput = document.getElementById('register-confirm-password')
+
+    const username = usernameInput.value.trim()
+    const password = passwordInput.value.trim()
+    const confirmPassword = confirmPasswordInput.value.trim()
 
     if (!username || !password || !confirmPassword) {
       alert('Preencha todos os campos.')
@@ -71,20 +81,25 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     try {
-      // Exemplo de envio para API (substituir por sua URL real)
-      const response = await fetch('/api/auth/register', {
+      // Envia os dados para a rota de registro no servidor
+      const response = await fetch('/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
       })
 
       if (!response.ok) {
-        const { message } = await response.json()
-        alert(message || 'Erro ao registrar.')
+        const { error, details } = await response.json()
+        alert(error || 'Erro ao registrar.')
+        console.error('Detalhes do erro:', details)
         return
       }
 
-      alert('Registro realizado com sucesso! Faça login.')
+      // Limpa os campos do formulário
+      usernameInput.value = ''
+      passwordInput.value = ''
+      confirmPasswordInput.value = ''
+
       // Alterna para a aba de login
       document.querySelector('[data-tab="login"]').click()
     } catch (error) {

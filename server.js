@@ -1,17 +1,17 @@
 const express = require('express')
 const mongoose = require('mongoose')
 const bcrypt = require('bcryptjs')
-const session = require('express-session')
-const path = require('path')
 const User = require('./models/User')
 const Game = require('./models/Game')
 const swaggerUi = require('swagger-ui-express')
 const swaggerJsdoc = require('swagger-jsdoc')
+const cors = require('cors')
 require('dotenv').config()
 
 const app = express()
 app.use(express.json())
-app.use(express.static(path.join(__dirname, 'public/pages')))
+app.use(express.static(__dirname + '/public'))
+app.use(cors())
 
 // Swagger config
 const swaggerOptions = {
@@ -29,15 +29,14 @@ const swaggerOptions = {
       },
     ],
   },
-  apis: ['./server.js'], // Documentação dentro deste arquivo
+  apis: ['./server.js'],
 }
 const swaggerSpec = swaggerJsdoc(swaggerOptions)
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))
 
 // MongoDB connection
-
 mongoose
-  .connect('mongodb://localhost:27017/cara-a-cara', {
+  .connect('mongodb://admin:secret@localhost:27017/cara-a-cara?authSource=admin', {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
@@ -117,6 +116,7 @@ mongoose
  *                   example: "E11000 duplicate key error collection"
  */
 app.post('/auth/register', async (req, res) => {
+  console.log(req.body)
   try {
     const { username, password } = req.body
     const hashedPassword = await bcrypt.hash(password, 10)
