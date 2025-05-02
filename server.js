@@ -6,11 +6,34 @@ const mongostr = require('connect-mongo')
 const path = require('path')
 const User = require('./models/User')
 const Game = require('./models/Game')
+const swaggerUi = require('swagger-ui-express')
+const swaggerJsdoc = require('swagger-jsdoc')
 require('dotenv').config()
 
 const app = express()
 app.use(express.json())
 app.use(express.static(path.join(__dirname, 'public/pages')))
+
+// Swagger config
+const swaggerOptions = {
+  definition: {
+    openapi: '3.0.0',
+    info: {
+      title: 'API de Autenticação - Cara-a-Cara',
+      version: '1.0.0',
+      description: 'API para autenticação de usuários no jogo Cara-a-Cara',
+    },
+    servers: [
+      {
+        url: 'http://localhost:3000',
+        description: 'Servidor local',
+      },
+    ],
+  },
+  apis: ['./server.js'], // Documentação dentro deste arquivo
+}
+const swaggerSpec = swaggerJsdoc(swaggerOptions)
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))
 
 // MongoDB connection
 
@@ -21,6 +44,73 @@ mongoose
   })
   .then(() => console.log('MongoDB connected'))
   .catch(err => console.error("Error. Couldn't connect to MongoDB", err))
+
+/**
+ * @swagger
+ * tags:
+ *   - name: Auth
+ *     description: Endpoints de autenticação
+ */
+
+/**
+ * @swagger
+ * /auth/register:
+ *   post:
+ *     summary: Registra um novo usuário
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - username
+ *               - password
+ *             properties:
+ *               username:
+ *                 type: string
+ *                 example: jogador123
+ *               password:
+ *                 type: string
+ *                 example: senhaSegura123
+ *     responses:
+ *       201:
+ *         description: Usuário registrado com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: User created
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     username:
+ *                       type: string
+ *                       example: jogador123
+ *                     victories:
+ *                       type: integer
+ *                       example: 0
+ *                     gamesPlayed:
+ *                       type: integer
+ *                       example: 0
+ *       400:
+ *         description: Erro ao registrar o usuário
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Error registering
+ *                 details:
+ *                   type: string
+ *                   example: "E11000 duplicate key error collection"
+ */
 
 // Session configuration
 
@@ -70,7 +160,7 @@ app.post('/auth/register', async (req, res) => {
   }
 });
 
-//route for logging
+//route for logging in
 app.post('/auth/login', async (req, res) => {
   try {
     const {username, password} = req.body;
@@ -103,6 +193,7 @@ app.post('/auth/login', async (req, res) => {
   }
 })
 
+// route for logging out
 app.post('/auth/logout', (req, res) => {
   req.session.destroy(err => {
     if(err) return res.status(500).json({
