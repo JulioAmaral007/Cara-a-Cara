@@ -30,7 +30,7 @@ const swaggerOptions = {
     },
     servers: [
       {
-        url: 'http://localhost:3000',
+        url: 'https://localhost:3000',
         description: 'Servidor local',
       },
     ],
@@ -121,17 +121,21 @@ mongoose
 app.use(session({
   secret: 'progwebt1',
   resave: false,
-  seveUninitialized: false,
+  saveUninitialized: false,
   store: mongostr.create({
     mongoUrl: 'mongodb://localhost:27017/cara-a-cara',
   }),
-  cookie: { secure: false}
+  cookie: { 
+    secure: false,
+    httpOnly: true,
+    sameSite: 'lax'
+  }
 }));
 
 const requireAuth = (req, res, next) => {
-    if(!req.session.sessionId) {
+    if(!req.session.userId) {
       res.status(401).json({error: 'Not authenticated'});
-      res.sendFile(_dirname + '/pages/login.html');
+      res.sendFile(__dirname + '/public/pages/login.html');
     } else next();
 }
 
@@ -178,7 +182,11 @@ app.post('/auth/login', async (req, res) => {
       return res.status(401).json({error: 'Incorrect password'});
     }
 
-    req.session.sessionId = user._id;
+    req.session.userId = user._id;
+    await User.findByIdAndUpdate(user._id, {
+      lastActive: new Date(),
+      isOnline: true
+    });
 
     res.json({
       message: 'You are logged',
@@ -198,13 +206,19 @@ app.post('/auth/login', async (req, res) => {
 })
 
 // route for logging out
-app.post('/auth/logout', requireAuth, (req, res) => {
+app.post('/auth/logout', requireAuth, async (req, res) => {
+  await User.findByIdAndUpdate(req.session.userId, {
+    lastActive: new Date(),
+    isOnline: false
+  })
   req.session.destroy(err => {
     if(err) return res.status(500).json({
       error: 'Internal server error, logout failed',
       details: err.message
     })
+    res.clearCookie('connect.sid');
     res.json({message: 'Logged out'})
+    console.log('Logged out successfully')
   })
 })
 
@@ -218,7 +232,7 @@ app.post('/game/start', requireAuth, (req, res) => {
  }
 });
 
-app.post('/game/:id', requireAuth, (req, res) => {
+app.get('/game/:id', requireAuth, (req, res) => {
   try {
 
   } catch {
@@ -228,27 +242,57 @@ app.post('/game/:id', requireAuth, (req, res) => {
 
 // Player routes
 
-app.get('/players/online', requireAuth, (req, res) => {
+app.get('/players/online', requireAuth, async (req, res) => {
   try {
-
-  } catch {
-
+    let users = await User.find({isOnline: true}, {password: 0});
+    res.json(users);
+  } catch (err) {
+    res.status(500).json("Couldn't return online players");
   }
 });
 
-app.post('/player/:id', requireAuth, (req, res) => {
+app.get('/player/:username', requireAuth, async (req, res) => {
   try {
-
-  } catch {
-
+    let user = await User.findOne(
+      {username: req.params.username},
+      {password: 0}
+    );
+    if(!user){
+      return res.status(404).json({error: "Player was no found"});
+    }
+    res.json(user);
+  } catch (err){
+    res.status(500).json({error: 'Server error', details: err.message});
   }
 });
 
-app.post('/player/stats', requireAuth, (req, res) => {
+app.get('/player/stats', requireAuth, async (req, res) => {
   try {
+    let userId = req.session.userId;
 
-  } catch {
+    let player = await User.findById(
+      userId,
+      {
+        victories: 1,
+        gamesPlayed: 1,
+        _id: 0
+      }
+    );
 
+    if(!player) {
+      return res.status(404).json({error: 'Player was not found'});
+    }
+
+    res.json({
+      victories: player.victories,
+      gamesPlayed: player.gamesPlayed
+    });
+
+  } catch (err){
+    res.status(500).json({
+      error: 'Server error',
+      details: err.message
+    });
   }
 });
 
