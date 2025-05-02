@@ -3,14 +3,17 @@ document.addEventListener('DOMContentLoaded', () => {
   const tabButtons = document.querySelectorAll('.tab-btn')
   const tabContents = document.querySelectorAll('.tab-content')
 
+  // biome-ignore lint/complexity/noForEach: <explanation>
   tabButtons.forEach(button => {
     button.addEventListener('click', () => {
       // Alterna botão ativo
+      // biome-ignore lint/complexity/noForEach: <explanation>
       tabButtons.forEach(btn => btn.classList.remove('active'))
       button.classList.add('active')
 
       // Alterna conteúdo
       const target = button.dataset.tab
+      // biome-ignore lint/complexity/noForEach: <explanation>
       tabContents.forEach(tab => {
         tab.classList.remove('active')
         if (tab.id === `${target}-tab`) tab.classList.add('active')

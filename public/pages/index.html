@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Cara-a-Cara - Redirecionando</title>
     <link rel="stylesheet" href="styles.css" />
+    <link rel="icon" type="image/x-icon" href="/imgs/favicon.ico" />
     <style>
       .redirect-container {
         display: flex;
@@ -42,21 +43,35 @@
     <script>
       // Verificar se o usuário está logado e redirecionar para a página apropriada
       document.addEventListener("DOMContentLoaded", async () => {
-        try {
-          const response = await fetch("/api/user");
+        // Função para verificar a sessão
+        async function checkSession() {
+          try {
+            await fetch("/auth/check-session", {
+              method: "GET",
+              credentials: "include", // Inclui cookies na requisição
+            });
 
-          if (response.ok) {
-            // Usuário está logado, redirecionar para o lobby
             window.location.href = "lobby.html";
-          } else {
-            // Usuário não está logado, redirecionar para a página de login
-            // window.location.href = 'login.html';
+          } catch (error) {
+            alert("Sessão expirada. Faça login novamente.");
+            window.location.href = "/pages/login.html";
           }
-        } catch (error) {
-          console.error("Erro ao verificar status de autenticação:", error);
-          // Em caso de erro, redirecionar para a página de login
-          //   window.location.href = "login.html";
         }
+        // try {
+        //   const response = await fetch("/api/user");
+
+        //   if (response.ok) {
+        //     // Usuário está logado, redirecionar para o lobby
+        //     window.location.href = "lobby.html";
+        //   } else {
+        //     // Usuário não está logado, redirecionar para a página de login
+        //     // window.location.href = 'login.html';
+        //   }
+        // } catch (error) {
+        //   console.error("Erro ao verificar status de autenticação:", error);
+        //   // Em caso de erro, redirecionar para a página de login
+        //   window.location.href = "login.html";
+        // }
       });
     </script>
   </body>

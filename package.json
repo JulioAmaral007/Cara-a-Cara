@@ -5,12 +5,7 @@
   "scripts": {
     "dev": "node --watch server.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "lint": "npx @biomejs/biome lint ./",
-    "lint-ap ply": "npx @biomejs/biome lint ./ --apply",
-    "format": "npx @biomejs/biome format ./",
     "format-apply": "npx @biomejs/biome format ./ --write",
-    "check": "npx @biomejs/biome check ./",
-    "check-apply": "npx @biomejs/biome check ./ --apply",
     "start": "node server.js"
   },
   "keywords": [],

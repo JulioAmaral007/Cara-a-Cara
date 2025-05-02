@@ -6,7 +6,7 @@ const currentUser = {
 }
 
 // Simula lista de jogadores online
-let playersOnline = [
+const playersOnline = [
   { name: 'Jogador1', victories: 12, games: 30 },
   { name: 'JogadoraPro', victories: 24, games: 50 },
   { name: 'NoobMaster69', victories: 3, games: 15 },
@@ -49,10 +49,10 @@ function renderPlayers() {
   if (playersOnline.length === 0) {
     noPlayersMessage.classList.remove('hidden')
     return
-  } else {
-    noPlayersMessage.classList.add('hidden')
   }
+  noPlayersMessage.classList.add('hidden')
 
+  // biome-ignore lint/complexity/noForEach: <explanation>
   playersOnline.forEach(player => {
     const li = document.createElement('li')
     li.className = 'player-card'
@@ -85,11 +85,25 @@ refreshPlayersBtn.addEventListener('click', () => {
 })
 
 // Simula logout
-logoutBtn.addEventListener('click', () => {
-  alert('Você saiu da conta.')
-  // Redirecionar ou esconder lobby
+logoutBtn.addEventListener('click', async () => {
+  await fetch('/auth/logout', { method: 'POST' })
+  window.location.href = '/pages/login.html'
 })
 
+// Função para verificar a sessão
+async function checkSession() {
+  try {
+    await fetch('/auth/check-session', {
+      method: 'GET',
+      credentials: 'include', // Inclui cookies na requisição
+    })
+  } catch (error) {
+    alert('Sessão expirada. Faça login novamente.')
+    window.location.href = '/pages/login.html'
+  }
+}
+
 // Inicialização
+checkSession()
 updateUserInfo()
 renderPlayers()

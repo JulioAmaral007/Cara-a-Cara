@@ -21,6 +21,7 @@ function initGameScreen() {
   opponentName.textContent = opponent.name
   toggleTurnIndicator(isMyTurn)
   addCharacterClickEvents()
+  setRandomSecretCharacter()
 }
 
 // Alterna indicador de turno
@@ -39,11 +40,29 @@ function toggleTurnIndicator(isYourTurn) {
 // Clique nos personagens para marcar/eliminar
 function addCharacterClickEvents() {
   const cards = charactersGrid.querySelectorAll('.character-card')
+  // biome-ignore lint/complexity/noForEach: <explanation>
   cards.forEach(card => {
     card.addEventListener('click', () => {
-      card.classList.toggle('eliminated')
+      card.classList.toggle('flipped') // Adiciona ou remove a classe 'flipped'
     })
   })
+}
+
+// Define personagem secreto aleatório
+function setRandomSecretCharacter() {
+  const secretCharacterCard = document.getElementById('secret-character-card')
+
+  // Lista de imagens dos personagens (ajuste o caminho conforme necessário)
+  const characterImages = Array.from({ length: 24 }, (_, i) => `/imgs/f${i + 1}.png`)
+
+  // Seleciona uma imagem aleatória
+  const randomIndex = Math.floor(Math.random() * characterImages.length)
+  const randomImage = characterImages[randomIndex]
+
+  // Define a imagem no personagem secreto
+  const imgElement = secretCharacterCard.querySelector('img')
+  imgElement.src = randomImage
+  imgElement.alt = `Personagem Secreto ${randomIndex + 1}`
 }
 
 // Enviar mensagem
@@ -95,5 +114,20 @@ leaveGameBtn.addEventListener('click', () => {
   // Aqui você pode redirecionar ou esconder a tela de jogo
 })
 
-// Executa ao carregar
+// Função para verificar a sessão
+async function checkSession() {
+  try {
+    await fetch('/auth/check-session', {
+      method: 'GET',
+      credentials: 'include', // Inclui cookies na requisição
+    })
+  } catch (error) {
+    alert('Sessão expirada. Faça login novamente.')
+    window.location.href = '/pages/login.html'
+  }
+}
+
+// Inicialização
+checkSession()
+setRandomSecretCharacter() // Define o personagem secreto aleatório
 initGameScreen()
