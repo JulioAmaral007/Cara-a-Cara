@@ -36,7 +36,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))
 
 // MongoDB connection
 mongoose
-  .connect('mongodb://admin:secret@localhost:27017/cara-a-cara?authSource=admin', {
+  .connect('mongodb://localhost:27017/cara-a-cara', {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
