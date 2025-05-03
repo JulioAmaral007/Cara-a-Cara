@@ -72,3 +72,17 @@
 .form-group input::placeholder {
   color: #aaa;
 }
+
+.error-message {
+  color: red;
+  font-size: 0.9rem;
+  margin-top: 5px;
+  text-align: center; /* Centraliza a mensagem */
+  padding-bottom: 5px;
+  opacity: 0; /* Inicialmente invisível */
+  transition: opacity 0.3s ease-in-out; /* Suaviza a transição */
+}
+
+.error-message.show {
+  opacity: 1; /* Torna visível quando a classe 'show' é adicionada */
+}

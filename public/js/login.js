@@ -27,12 +27,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const usernameInput = document.getElementById('login-username')
     const passwordInput = document.getElementById('login-password')
+    const errorMessage = document.getElementById('login-error') // Elemento para exibir o erro
 
     const username = usernameInput.value.trim()
     const password = passwordInput.value.trim()
 
     if (!username || !password) {
-      alert('Por favor, preencha todos os campos.')
+      errorMessage.textContent = 'Por favor, preencha todos os campos.'
+      errorMessage.classList.add('show') // Adiciona a classe 'show' para exibir a mensagem
       return
     }
 
@@ -45,19 +47,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (!response.ok) {
         const { message } = await response.json()
-        alert(message || 'Usuário ou senha inválidos.')
+        errorMessage.textContent = message || 'Usuário ou senha inválidos.'
+        errorMessage.classList.add('show') // Exibe a mensagem de erro
         return
       }
 
-      // Limpa os campos do formulário
+      // Limpa os campos do formulário e a mensagem de erro
       usernameInput.value = ''
       passwordInput.value = ''
+      errorMessage.textContent = ''
+      errorMessage.classList.remove('show') // Remove a classe 'show'
 
       // Redireciona para o lobby após login bem-sucedido
       window.location.href = 'lobby.html'
     } catch (error) {
       console.error('Erro no login:', error)
-      alert('Erro ao tentar fazer login.')
+      errorMessage.textContent = 'Erro ao tentar fazer login.'
+      errorMessage.classList.add('show') // Exibe a mensagem de erro
     }
   })
 

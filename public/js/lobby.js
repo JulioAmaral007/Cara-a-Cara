@@ -1,10 +1,3 @@
-// Simula dados do usuário atual
-const currentUser = {
-  name: 'PlayerAtual',
-  victories: 18,
-  games: 42,
-}
-
 // Simula lista de jogadores online
 const playersOnline = [
   { name: 'Jogador1', victories: 12, games: 30 },
@@ -28,18 +21,31 @@ const refreshPlayersBtn = document.getElementById('refresh-players-btn')
 const logoutBtn = document.getElementById('logout-btn')
 
 // Função para atualizar os dados do usuário
-function updateUserInfo() {
-  userDisplayName.textContent = currentUser.name
-  userVictories.textContent = `${currentUser.victories} vitórias`
-  userGames.textContent = `${currentUser.games} jogos`
+async function updateUserInfo() {
+  try {
+    const response = await fetch('/player/stats', {
+      method: 'GET',
+      credentials: 'include', // Inclui cookies na requisição
+    })
+    const data = await response.json()
 
-  statVictories.textContent = currentUser.victories
-  statGames.textContent = currentUser.games
+    userDisplayName.textContent = data.player.username
+    userVictories.textContent = `${data.player.victories} vitórias`
+    userGames.textContent = `${data.player.gamesPlayed} jogos`
 
-  const winRate =
-    currentUser.games > 0 ? ((currentUser.victories / currentUser.games) * 100).toFixed(1) : 0
+    statVictories.textContent = data.player.victories
+    statGames.textContent = data.player.gamesPlayed
 
-  statWinrate.textContent = `${winRate}%`
+    const winRate =
+      data.player.gamesPlayed > 0
+        ? ((data.player.victories / data.player.gamesPlayed) * 100).toFixed(1)
+        : 0
+
+    statWinrate.textContent = `${winRate}%`
+  } catch (error) {
+    alert('Sessão expirada. Faça login novamente.')
+    window.location.href = '/pages/login.html'
+  }
 }
 
 // Função para renderizar os cards de jogadores
@@ -90,20 +96,20 @@ logoutBtn.addEventListener('click', async () => {
   window.location.href = '/pages/login.html'
 })
 
-// Função para verificar a sessão
-async function checkSession() {
-  try {
-    await fetch('/auth/check-session', {
-      method: 'GET',
-      credentials: 'include', // Inclui cookies na requisição
-    })
-  } catch (error) {
-    alert('Sessão expirada. Faça login novamente.')
-    window.location.href = '/pages/login.html'
-  }
-}
+// // Função para verificar a sessão
+// async function checkSession() {
+//   try {
+//     await fetch('/auth/check-session', {
+//       method: 'GET',
+//       credentials: 'include', // Inclui cookies na requisição
+//     })
+//   } catch (error) {
+//     alert('Sessão expirada. Faça login novamente.')
+//     window.location.href = '/pages/login.html'
+//   }
+// }
 
-// Inicialização
-checkSession()
+// // Inicialização
+// checkSession()
 updateUserInfo()
 renderPlayers()

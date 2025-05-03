@@ -116,12 +116,12 @@ leaveGameBtn.addEventListener('click', () => {
 
 // Função para verificar a sessão
 async function checkSession() {
-  try {
-    await fetch('/auth/check-session', {
-      method: 'GET',
-      credentials: 'include', // Inclui cookies na requisição
-    })
-  } catch (error) {
+  const response = await fetch('/auth/check-session', {
+    method: 'GET',
+    credentials: 'include', // Inclui cookies na requisição
+  })
+
+  if (!response.ok) {
     alert('Sessão expirada. Faça login novamente.')
     window.location.href = '/pages/login.html'
   }
