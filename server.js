@@ -9,9 +9,13 @@ const Game = require('./models/Game')
 const swaggerUi = require('swagger-ui-express')
 const swaggerJsdoc = require('swagger-jsdoc')
 const cors = require('cors')
+const WebSocket = require('ws')
+const http = require('http')
 require('dotenv').config()
 
 const app = express()
+const server = http.createServer(app);
+
 app.use(express.json())
 app.use(express.static(__dirname + '/public'))
 app.use(cors({
@@ -192,7 +196,8 @@ app.post('/auth/login', async (req, res) => {
       message: 'You are logged',
       user: {
         username: user.username,
-        victories: user.victories
+        victories: user.victories,
+        gamesPlayed: user.gamesPlayed
       }
     })
     console.log(user.username,'is logged');
@@ -224,19 +229,58 @@ app.post('/auth/logout', requireAuth, async (req, res) => {
 
 // Game routes
 
-app.post('/game/start', requireAuth, (req, res) => {
- try {
-
- } catch {
-
- }
-});
-
-app.get('/game/:id', requireAuth, (req, res) => {
+app.post('/game/update', requireAuth, async (req, res) => {
   try {
+    let {winner, loser} = req.body;
 
-  } catch {
-    
+    let [winnerUpdate, loserUpdate] = await Promise.all([
+      User.findOneAndUpdate(
+        {username: winner},
+        {$inc: {victories: 1, gamesPlayed: 1 }},
+        {new: true}
+      ),
+      User.findOneAndUpdate(
+        {username: loser},
+        {$inc: {gamesPlayed: 1}},
+        {new: true}
+      )
+    ]);
+
+    if (!winnerUpdate || !loserUpdate) {
+      if (winnerUpdate) {
+        await User.findOneAndUpdate(
+          { username: winner },
+          { $inc: { victories: -1, gamesPlayed: -1 } }
+        );
+      }
+      if (loserUpdate) {
+        await User.findOneAndUpdate(
+          { username: loser },
+          { $inc: { gamesPlayed: -1 } }
+        );
+      }
+
+      return res.status(404).json({
+        success: false,
+        error: 'Player not found',
+        details: !winnerUpdate ? `User "${winner}" not found` : `User "${loser}" not found`
+      });
+
+    }
+
+    res.json({
+      success: true,
+      wVictories: winnerUpdate.victories,
+      wGamesPlayed: winnerUpdate.gamesPlayed,
+      lGamesPlayed: loserUpdate.gamesPlayed
+    })
+
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      error: "Couldn't update player stats",
+      details: err.message
+    })
   }
 });
 
