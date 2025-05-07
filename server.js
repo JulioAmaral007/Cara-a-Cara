@@ -16,6 +16,8 @@ require('dotenv').config()
 const app = express()
 const server = http.createServer(app)
 
+const wss = new WebSocket.Server({ server }); //reaproveita servidor para servidor com socket
+
 app.use(express.json())
 app.use(express.static(__dirname + '/public'))
 app.use(
@@ -604,4 +606,130 @@ app.get('/player/:username', requireAuth, async (req, res) => {
 })
 
 const PORT = process.env.PORT || 3000
-app.listen(PORT, '0.0.0.0', () => console.log('Server running on port ', PORT))
+server.listen(PORT, '0.0.0.0', () => console.log('Server running on port ', PORT))
+
+//WebSocket
+const clientesConectados = new Map();
+
+// Evento de conexão WebSocket
+wss.on('connection', (ws) => {
+    console.log('Cliente conectado via WebSocket');
+  
+    ws.on('message', (msg) => {
+      const data = JSON.parse(msg);
+  
+      if (data.type === 'login') {
+        const nome = data.nome;
+
+        for (const [sock, user] of clientesConectados.entries()) {
+          if (user === nome) {
+            sock.close();
+            clientesConectados.delete(sock);
+          }
+        }  
+
+        clientesConectados.set(ws, nome);
+        //console.log(`Usuário logou: ${nome}`);
+      }
+      if(data.type == "log-out"){
+        const nome = data.nome;
+
+        for (const [sock, user] of clientesConectados.entries()) {
+          if (user === nome) {
+            sock.close();
+            clientesConectados.delete(sock);
+          }
+        } 
+
+        console.log(`Usuário deslogou: ${nome}`);
+      }
+      
+      if (data.type === 'desafio') {
+        const wsAlvo = getWsByNome(data.para);
+        //console.log(data.de)
+        //console.log(data.para)
+        if (wsAlvo) {
+          wsAlvo.send(JSON.stringify({
+            type: 'convite',
+            de: data.de
+          }));
+        }
+      }
+
+      if (data.type === 'respostaDesafio') {
+        const wsDesafiante = getWsByNome(data.para);
+        if (wsDesafiante) {
+          wsDesafiante.send(JSON.stringify({
+            type: 'respostaDesafio',
+            aceita: data.aceita,
+            com: data.de
+          }));
+        }
+      }
+
+      if (data.type === 'msg-env-game') {
+        
+        console.log(`Mensagem privada de ${data.de} para ${data.para}: ${data.valor}`);
+
+        const destinatario = getWsByNome(data.para);
+        //console.log(`Destinatário resolvido: ${destinatario ? 'sim' : 'não'}`);
+        //console.log(`Destino WebSocket encontrado: ${clientesConectados.get(destinatario)}`);
+        if (destinatario.readyState === WebSocket.OPEN) {
+          destinatario.send(JSON.stringify({
+            type: 'msg-receb-game',
+            de: data.de,
+            valor: data.valor
+          }));
+        } else {
+          console.log("WebSocket do destinatário está fechado.");
+        }
+      }
+      if (data.type === 'msg-end-game') {
+        
+        const destinatario = getWsByNome(data.para);
+        //console.log(`Destinatário resolvido: ${destinatario ? 'sim' : 'não'}`);
+        //console.log(`Destino WebSocket encontrado: ${clientesConectados.get(destinatario)}`);
+        if (destinatario.readyState === WebSocket.OPEN) {
+          destinatario.send(JSON.stringify({
+            type: 'msg-end-game',
+            de: data.de,
+          }));
+        } else {
+          console.log("WebSocket do destinatário está fechado.");
+        }
+      }
+      
+      broadcastListaUsuarios();
+
+    });
+
+    ws.on('close', () => {
+      clientesConectados.delete(ws); // remove da lista
+      broadcastListaUsuarios(); // envia lista atualizada para os demais
+    });
+
+  });
+
+  function broadcastListaUsuarios() {
+    const nomes = Array.from(clientesConectados.values());
+  
+    const mensagem = {
+      type: 'lista-usuarios',
+      usuarios: nomes
+    };
+  
+    const json = JSON.stringify(mensagem);
+  
+    clientesConectados.forEach((_, clienteSocket) => {
+      if (clienteSocket.readyState === WebSocket.OPEN) {
+        clienteSocket.send(json);
+      }
+    });
+  }
+
+  function getWsByNome(nome) {
+    for (const [ws, nomeCliente] of clientesConectados.entries()) {
+      if (nomeCliente === nome) return ws;
+    }
+    return null;
+  }
