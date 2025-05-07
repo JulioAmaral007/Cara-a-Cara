@@ -1,3 +1,97 @@
+//Websocket setup
+
+const ws = new WebSocket("ws://localhost:3000");
+
+const meuID = sessionStorage.getItem("usuario");
+
+ws.onopen = () => {
+  if (meuID) {
+    ws.send(JSON.stringify({ type: 'login', nome: meuID }));
+  }
+};
+
+ws.onmessage = (event) => {
+  console.log("Mensagem recebida no cliente:", event.data);
+  const data = JSON.parse(event.data);
+
+  if (data.type === 'lista-usuarios') {
+    atualizarListaUsuarios(data.usuarios.filter(nome => nome !== meuID));
+  }
+
+  if (data.type === 'convite') {
+    console.log("Recebido convite de", data.de, "por", meuID);
+    const aceitar = confirm(`${data.de} te desafiou para uma partida. Aceitar?`);
+    console.log("Resposta confirm foi:", aceitar);
+    ws.send(JSON.stringify({
+      type: 'respostaDesafio',
+      de: meuID,
+      para: data.de,
+      aceita: aceitar
+    }));
+
+    if (aceitar) {
+      sessionStorage.setItem("oponente", data.de);
+      window.location.href = "game.html";
+    }
+  }
+
+  if (data.type === 'respostaDesafio') {
+    if (data.aceita) {
+      sessionStorage.setItem("oponente", data.com);
+      window.location.href = "game.html";
+    } else {
+      alert(`${data.com} recusou seu desafio.`);
+    }
+  }
+
+};
+
+function atualizarListaUsuarios(nomes) {
+  const lista = document.getElementById('players-list');
+  const vazio = document.getElementById('no-players-message');
+
+  // Limpa a lista atual
+  lista.innerHTML = '';
+
+  if (nomes.length === 0) {
+    vazio.classList.remove('hidden');
+    return;
+  }
+
+  vazio.classList.add('hidden');
+
+  nomes.forEach((nome) => {
+    const li = document.createElement('li');
+    li.className = 'player-card';
+
+    li.innerHTML = `
+      <div class="player-avatar">
+        <i class="fas fa-user-circle"></i>
+      </div>
+      <div class="player-info">
+        <span class="player-name">${nome}</span>
+        <span class="player-stats">0 vitórias • 0 jogos</span>
+      </div>
+      <button class="btn btn-small btn-challenge">
+        <i class="fas fa-bolt"></i> Desafiar
+      </button>
+    `;
+
+    li.querySelector('.btn-challenge').addEventListener('click', () => {
+      //alert(`Você desafiou ${nome} para um duelo!`)
+      ws.send(JSON.stringify({
+        type: 'desafio',
+        de: meuID,
+        para: nome
+      }));
+    })
+
+    lista.appendChild(li);
+  });
+}
+
+ //Fim Websocket
+
 // Simula lista de jogadores online
 const playersOnline = [
   { name: 'Jogador1', victories: 12, games: 30 },
@@ -87,12 +181,14 @@ function renderPlayers() {
 refreshPlayersBtn.addEventListener('click', () => {
   // Você poderia buscar dados do servidor aqui
   alert('Lista de jogadores atualizada!')
-  renderPlayers()
+  //renderPlayers()
+  atualizarListaUsuarios(data.usuarios.filter(nome => nome !== meuID))
 })
 
 // Simula logout
 logoutBtn.addEventListener('click', async () => {
   await fetch('/auth/logout', { method: 'POST' })
+  ws.send(JSON.stringify({ type: 'log-out', nome: meuID }));
   window.location.href = '/pages/login.html'
 })
 

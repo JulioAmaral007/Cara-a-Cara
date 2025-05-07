@@ -1,5 +1,32 @@
-// Dados simulados
-const opponent = { name: 'JogadorInimigo' }
+//Websocket Setup
+const ws = new WebSocket("ws://localhost:3000");
+
+const meuID = sessionStorage.getItem("usuario");
+const opponent = sessionStorage.getItem("oponente");
+
+
+ws.onopen = () => {
+  if (meuID) {
+    ws.send(JSON.stringify({ type: 'login', nome: meuID }));
+  }
+};
+
+
+ws.onmessage = (event) => {
+  //console.log("Mensagem recebida bruta:", event.data); // 👈 deve aparecer
+  const data = JSON.parse(event.data);
+
+  if (data.type === 'msg-receb-game') {
+    console.log(`Mensagem recebida: ${data.valor}`);
+    writeMessage(data.valor);
+  }
+  if(data.type === 'msg-end-game'){
+    alert(`${data.de} saiu do jogo. Jogo encerrado, voltando pra lobby...`);
+    window.location.href = "lobby.html";
+  }
+};
+//Fim websocket setup
+
 const isMyTurn = true
 
 // DOM Elements
@@ -18,7 +45,7 @@ const leaveGameBtn = document.getElementById('leave-game-btn')
 
 // Inicialização
 function initGameScreen() {
-  opponentName.textContent = opponent.name
+  opponentName.textContent = opponent
   toggleTurnIndicator(isMyTurn)
   addCharacterClickEvents()
   setRandomSecretCharacter()
@@ -82,15 +109,33 @@ function sendMessage() {
   messageInput.value = ''
   messagesContainer.scrollTop = messagesContainer.scrollHeight
 
+  ws.send(JSON.stringify({
+    type: 'msg-env-game',
+    de: meuID,
+    para: opponent,
+    valor: text
+  }));
+
   // Simula resposta automática
-  setTimeout(() => {
+  /*setTimeout(() => {
     const response = document.createElement('div')
     response.className = 'chat-message opponent-message'
     response.innerHTML = `<p><strong>${opponent.name}:</strong> ${getBotReply(text)}</p>`
     messagesContainer.appendChild(response)
     messagesContainer.scrollTop = messagesContainer.scrollHeight
-  }, 1000)
+  }, 1000)*/
 }
+
+function writeMessage(text){
+
+  const msg = document.createElement('div')
+  msg.className = 'chat-message'
+  msg.innerHTML = `<p><strong>${opponent}:</strong> ${text}</p>`
+  messagesContainer.appendChild(msg)
+  messageInput.value = ''
+  messagesContainer.scrollTop = messagesContainer.scrollHeight
+}
+
 
 // Limpar chat
 clearChatBtn.addEventListener('click', () => {
@@ -98,6 +143,7 @@ clearChatBtn.addEventListener('click', () => {
 })
 
 // Bot simples de simulação
+/*
 function getBotReply(msg) {
   if (msg.toLowerCase().includes('seu personagem é')) {
     return 'Hmm... talvez!'
@@ -107,14 +153,23 @@ function getBotReply(msg) {
   }
   return 'Não entendi a pergunta.'
 }
-
+*/
 // Sair do jogo
 leaveGameBtn.addEventListener('click', () => {
   alert('Você saiu do jogo.')
   // Aqui você pode redirecionar ou esconder a tela de jogo
+
+  ws.send(JSON.stringify({
+    type: 'msg-end-game',
+    de: meuID,
+    para: opponent,
+  }));
+
+  window.location.href = "lobby.html";
 })
 
 // Função para verificar a sessão
+/*
 async function checkSession() {
   const response = await fetch('/auth/check-session', {
     method: 'GET',
@@ -125,7 +180,7 @@ async function checkSession() {
     alert('Sessão expirada. Faça login novamente.')
     window.location.href = '/pages/login.html'
   }
-}
+}*/
 
 // Inicialização
 checkSession()
