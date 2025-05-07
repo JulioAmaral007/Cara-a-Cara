@@ -1,5 +1,5 @@
 //Websocket Setup
-const ws = new WebSocket('ws://localhost:3000')
+const ws = new WebSocket('http://192.168.5.171:3000/')
 
 const meuID = sessionStorage.getItem('usuario')
 const opponent = sessionStorage.getItem('oponente')
