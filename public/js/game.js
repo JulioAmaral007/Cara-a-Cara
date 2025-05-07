@@ -1,37 +1,142 @@
 //Websocket Setup
-const ws = new WebSocket("ws://localhost:3000");
+const ws = new WebSocket('ws://localhost:3000')
 
-const meuID = sessionStorage.getItem("usuario");
-const opponent = sessionStorage.getItem("oponente");
-
+const meuID = sessionStorage.getItem('usuario')
+const opponent = sessionStorage.getItem('oponente')
 
 ws.onopen = () => {
   if (meuID) {
-    ws.send(JSON.stringify({ type: 'login', nome: meuID }));
+    ws.send(JSON.stringify({ type: 'login', nome: meuID }))
   }
-};
+}
 
+// Array com os nomes dos personagens
+const characterNames = [
+  'Susanna',
+  'Alfredo',
+  'Filippo',
+  'Chiara',
+  'Paolo',
+  'Giuseppe',
+  'Samuele',
+  'Giorgio',
+  'Anita',
+  'Manuele',
+  'Marco',
+  'Riccardo',
+  'Tommaso',
+  'Alessandro',
+  'Carlo',
+  'Ernesto',
+  'Guglielmo',
+  'Maria',
+  'Roberto',
+  'Pietro',
+  'Davide',
+  'Bernardo',
+  'Anna',
+  'Giacomo',
+]
 
-ws.onmessage = (event) => {
+ws.onmessage = event => {
   //console.log("Mensagem recebida bruta:", event.data); // 👈 deve aparecer
-  const data = JSON.parse(event.data);
+  const data = JSON.parse(event.data)
 
   if (data.type === 'msg-receb-game') {
-    console.log(`Mensagem recebida: ${data.valor}`);
-    writeMessage(data.valor);
-  }
-  if(data.type === 'msg-end-game'){
-    alert(`${data.de} saiu do jogo. Jogo encerrado, voltando pra lobby...`);
-    window.location.href = "lobby.html";
-  }
-};
-//Fim websocket setup
+    console.log(`Mensagem recebida: ${data.valor}`)
+    writeMessage(data.valor)
 
-const isMyTurn = true
+    // Verifica se é uma mensagem de adivinhação
+    const guessMatch = data.valor.match(/^Seu personagem é (.+)$/i)
+    if (guessMatch) {
+      const guessedCharacter = guessMatch[1]
+      const secretCharacterIndex = Number.parseInt(sessionStorage.getItem('secretCharacterIndex'))
+      const correctCharacter = characterNames[secretCharacterIndex]
+      console.log(guessedCharacter, correctCharacter)
+
+      if (guessedCharacter.toLowerCase() === correctCharacter.toLowerCase()) {
+        // Atualiza as estatísticas no servidor
+        updateGameStats(data.de, meuID)
+          .then(() => {
+            // Envia mensagem de fim de jogo para o oponente
+            ws.send(
+              JSON.stringify({
+                type: 'msg-end-game',
+                de: meuID,
+                para: opponent,
+                winner: data.de,
+              })
+            )
+
+            // Mostra mensagem para o perdedor
+            alert('Ops! Seu oponente acertou o personagem!')
+            // Redireciona para o lobby após um pequeno delay
+            setTimeout(() => {
+              window.location.href = 'lobby.html'
+              clearGameCharacter()
+            }, 2000)
+          })
+          .catch(error => {
+            console.error('Erro ao atualizar estatísticas:', error)
+            alert('Erro ao atualizar estatísticas do jogo')
+          })
+      } else {
+        alert('Ops! Personagem errado. Tente novamente!')
+      }
+    }
+  }
+  if (data.type === 'msg-end-game') {
+    if (data.winner) {
+      // Se eu sou o vencedor (data.de é o vencedor e data.de === meuID)
+      if (data.de === meuID) {
+        alert('Parabéns! Você acertou o personagem!')
+        clearGameCharacter()
+      } else {
+        alert(`${data.de} acertou o personagem! Jogo encerrado, voltando para o lobby...`)
+        clearGameCharacter()
+      }
+    } else {
+      alert(`${data.de} saiu do jogo. Jogo encerrado, voltando para o lobby...`)
+      clearGameCharacter()
+    }
+    window.location.href = 'lobby.html'
+  }
+}
+
+// Função para atualizar as estatísticas do jogo
+async function updateGameStats(winner, loser) {
+  try {
+    const response = await fetch('/game/update', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        winner: winner,
+        loser: loser,
+      }),
+    })
+
+    if (!response.ok) {
+      throw new Error('Erro ao atualizar estatísticas')
+    }
+
+    const data = await response.json()
+    if (!data.success) {
+      throw new Error(data.error || 'Erro ao atualizar estatísticas')
+    }
+
+    return data
+  } catch (error) {
+    console.error('Erro na requisição:', error)
+    throw error
+  }
+}
+
+//Fim websocket setup
 
 // DOM Elements
 const opponentName = document.getElementById('opponent-name')
-const turnIndicator = document.getElementById('turn-indicator')
 const secretCharacterCard = document.getElementById('secret-character-card')
 
 const charactersGrid = document.getElementById('characters-grid')
@@ -46,22 +151,8 @@ const leaveGameBtn = document.getElementById('leave-game-btn')
 // Inicialização
 function initGameScreen() {
   opponentName.textContent = opponent
-  toggleTurnIndicator(isMyTurn)
   addCharacterClickEvents()
   setRandomSecretCharacter()
-}
-
-// Alterna indicador de turno
-function toggleTurnIndicator(isYourTurn) {
-  if (isYourTurn) {
-    turnIndicator.classList.add('your-turn')
-    turnIndicator.classList.remove('opponent-turn')
-    turnIndicator.innerHTML = `<i class="fas fa-play"></i> <span>Seu turno</span>`
-  } else {
-    turnIndicator.classList.remove('your-turn')
-    turnIndicator.classList.add('opponent-turn')
-    turnIndicator.innerHTML = `<i class="fas fa-clock"></i> <span>Turno do oponente</span>`
-  }
 }
 
 // Clique nos personagens para marcar/eliminar
@@ -79,17 +170,51 @@ function addCharacterClickEvents() {
 function setRandomSecretCharacter() {
   const secretCharacterCard = document.getElementById('secret-character-card')
 
-  // Lista de imagens dos personagens (ajuste o caminho conforme necessário)
-  const characterImages = Array.from({ length: 24 }, (_, i) => `/imgs/f${i + 1}.png`)
+  // Verifica se já existe um personagem no sessionStorage para esta partida
+  let randomIndex = sessionStorage.getItem('secretCharacterIndex')
 
-  // Seleciona uma imagem aleatória
-  const randomIndex = Math.floor(Math.random() * characterImages.length)
-  const randomImage = characterImages[randomIndex]
+  // Verifica se é uma nova partida (não tem personagem no sessionStorage)
+  if (!randomIndex) {
+    // Lista de imagens dos personagens
+    const characterImages = Array.from({ length: 24 }, (_, i) => `/imgs/f${i + 1}.png`)
+
+    // Seleciona uma imagem aleatória
+    randomIndex = Math.floor(Math.random() * characterImages.length)
+
+    // Salva no sessionStorage para persistir durante a partida
+    sessionStorage.setItem('secretCharacterIndex', randomIndex)
+
+    // Salva no localStorage para marcar que já geramos um personagem para esta partida
+    localStorage.setItem('currentGameCharacter', randomIndex)
+  } else {
+    // Se já existe um personagem no sessionStorage, verifica se é da mesma partida
+    const currentGameCharacter = localStorage.getItem('currentGameCharacter')
+
+    // Se o personagem no sessionStorage for diferente do que está no localStorage,
+    // significa que é uma nova partida
+    if (currentGameCharacter !== randomIndex) {
+      // Gera um novo personagem
+      const characterImages = Array.from({ length: 24 }, (_, i) => `/imgs/f${i + 1}.png`)
+      randomIndex = Math.floor(Math.random() * characterImages.length)
+
+      // Atualiza tanto o sessionStorage quanto o localStorage
+      sessionStorage.setItem('secretCharacterIndex', randomIndex)
+      localStorage.setItem('currentGameCharacter', randomIndex)
+    }
+  }
+
+  const randomImage = `/imgs/f${parseInt(randomIndex) + 1}.png`
 
   // Define a imagem no personagem secreto
   const imgElement = secretCharacterCard.querySelector('img')
   imgElement.src = randomImage
-  imgElement.alt = `Personagem Secreto ${randomIndex + 1}`
+  imgElement.alt = `Personagem Secreto ${characterNames[parseInt(randomIndex)]}`
+}
+
+// Adicione esta função para limpar o personagem quando sair do jogo
+function clearGameCharacter() {
+  localStorage.removeItem('currentGameCharacter')
+  sessionStorage.removeItem('secretCharacterIndex')
 }
 
 // Enviar mensagem
@@ -109,25 +234,17 @@ function sendMessage() {
   messageInput.value = ''
   messagesContainer.scrollTop = messagesContainer.scrollHeight
 
-  ws.send(JSON.stringify({
-    type: 'msg-env-game',
-    de: meuID,
-    para: opponent,
-    valor: text
-  }));
-
-  // Simula resposta automática
-  /*setTimeout(() => {
-    const response = document.createElement('div')
-    response.className = 'chat-message opponent-message'
-    response.innerHTML = `<p><strong>${opponent.name}:</strong> ${getBotReply(text)}</p>`
-    messagesContainer.appendChild(response)
-    messagesContainer.scrollTop = messagesContainer.scrollHeight
-  }, 1000)*/
+  ws.send(
+    JSON.stringify({
+      type: 'msg-env-game',
+      de: meuID,
+      para: opponent,
+      valor: text,
+    })
+  )
 }
 
-function writeMessage(text){
-
+function writeMessage(text) {
   const msg = document.createElement('div')
   msg.className = 'chat-message'
   msg.innerHTML = `<p><strong>${opponent}:</strong> ${text}</p>`
@@ -136,53 +253,24 @@ function writeMessage(text){
   messagesContainer.scrollTop = messagesContainer.scrollHeight
 }
 
-
 // Limpar chat
 clearChatBtn.addEventListener('click', () => {
   messagesContainer.innerHTML = ''
 })
 
-// Bot simples de simulação
-/*
-function getBotReply(msg) {
-  if (msg.toLowerCase().includes('seu personagem é')) {
-    return 'Hmm... talvez!'
-  }
-  if (msg.includes('?')) {
-    return Math.random() > 0.5 ? 'Sim.' : 'Não.'
-  }
-  return 'Não entendi a pergunta.'
-}
-*/
 // Sair do jogo
 leaveGameBtn.addEventListener('click', () => {
-  alert('Você saiu do jogo.')
-  // Aqui você pode redirecionar ou esconder a tela de jogo
+  ws.send(
+    JSON.stringify({
+      type: 'msg-end-game',
+      de: meuID,
+      para: opponent,
+    })
+  )
 
-  ws.send(JSON.stringify({
-    type: 'msg-end-game',
-    de: meuID,
-    para: opponent,
-  }));
-
-  window.location.href = "lobby.html";
+  clearGameCharacter()
+  window.location.href = 'lobby.html'
 })
 
-// Função para verificar a sessão
-/*
-async function checkSession() {
-  const response = await fetch('/auth/check-session', {
-    method: 'GET',
-    credentials: 'include', // Inclui cookies na requisição
-  })
-
-  if (!response.ok) {
-    alert('Sessão expirada. Faça login novamente.')
-    window.location.href = '/pages/login.html'
-  }
-}*/
-
-// Inicialização
-checkSession()
 setRandomSecretCharacter() // Define o personagem secreto aleatório
 initGameScreen()

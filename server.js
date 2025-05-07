@@ -3,26 +3,27 @@ const mongoose = require('mongoose')
 const bcrypt = require('bcryptjs')
 const session = require('express-session')
 const mongostr = require('connect-mongo')
-const path = require('path')
+const path = require('node:path')
 const User = require('./models/User')
 const Game = require('./models/Game')
 const swaggerUi = require('swagger-ui-express')
 const swaggerJsdoc = require('swagger-jsdoc')
 const cors = require('cors')
 const WebSocket = require('ws')
-const http = require('http')
+const http = require('node:http')
 require('dotenv').config()
 
 const app = express()
 const server = http.createServer(app)
 
-const wss = new WebSocket.Server({ server }); //reaproveita servidor para servidor com socket
+const wss = new WebSocket.Server({ server }) //reaproveita servidor para servidor com socket
 
 app.use(express.json())
+// biome-ignore lint/style/useTemplate: <explanation>
 app.use(express.static(__dirname + '/public'))
 app.use(
   cors({
-    origin: 'https//localhost:3000',
+    origin: 'http://localhost:3000',
     credentials: true,
   })
 )
@@ -38,7 +39,7 @@ const swaggerOptions = {
     },
     servers: [
       {
-        url: 'https://localhost:3000',
+        url: 'http://localhost:3000',
         description: 'Servidor local',
       },
     ],
@@ -60,7 +61,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))
 
 // MongoDB connection
 mongoose
-  .connect('mongodb://localhost:27017/cara-a-cara', {
+  .connect('mongodb://admin:secret@localhost:27017/cara-a-cara?authSource=admin', {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
@@ -75,7 +76,7 @@ app.use(
     resave: false,
     saveUninitialized: false,
     store: mongostr.create({
-      mongoUrl: 'mongodb://localhost:27017/cara-a-cara',
+      mongoUrl: 'mongodb://admin:secret@localhost:27017/cara-a-cara?authSource=admin',
     }),
     cookie: {
       secure: false,
@@ -87,9 +88,12 @@ app.use(
 
 const requireAuth = (req, res, next) => {
   if (!req.session.userId) {
-    res.status(401).json({ error: 'Not authenticated' })
-    res.sendFile(__dirname + '/public/pages/login.html')
-  } else next()
+    if (req.xhr || req.headers.accept.includes('application/json')) {
+      return res.status(401).json({ error: 'Não autenticado' })
+    }
+    return res.redirect('/pages/login.html')
+  }
+  next()
 }
 
 /**
@@ -508,17 +512,18 @@ app.get('/players/online', requireAuth, async (req, res) => {
  */
 app.get('/player/stats', requireAuth, async (req, res) => {
   try {
-    let userId = req.session.userId
-    //console.log('Session userId:', userId, 'Type:', typeof userId);
+    const { username } = req.query
+    let query = {}
 
-    if (!mongoose.Types.ObjectId.isValid(userId)) {
-      return res.status(400).json({
-        error: 'Invalid user ID format',
-        receiveId: userId,
-      })
+    if (username) {
+      // Se um username foi fornecido, busca por username
+      query = { username }
+    } else {
+      // Se não, usa o ID da sessão
+      query = { _id: req.session.userId }
     }
 
-    let player = await User.findById(userId, {
+    let player = await User.findOne(query, {
       username: 1,
       victories: 1,
       gamesPlayed: 1,
@@ -529,7 +534,7 @@ app.get('/player/stats', requireAuth, async (req, res) => {
       return res.status(404).json({
         error: 'Player was not found',
         debug: {
-          sessionUserId: userId,
+          query,
         },
       })
     }
@@ -609,127 +614,163 @@ const PORT = process.env.PORT || 3000
 server.listen(PORT, '0.0.0.0', () => console.log('Server running on port ', PORT))
 
 //WebSocket
-const clientesConectados = new Map();
+const clientesConectados = new Map()
 
 // Evento de conexão WebSocket
-wss.on('connection', (ws) => {
-    console.log('Cliente conectado via WebSocket');
-  
-    ws.on('message', (msg) => {
-      const data = JSON.parse(msg);
-  
-      if (data.type === 'login') {
-        const nome = data.nome;
+wss.on('connection', ws => {
+  console.log('Cliente conectado via WebSocket')
 
-        for (const [sock, user] of clientesConectados.entries()) {
-          if (user === nome) {
-            sock.close();
-            clientesConectados.delete(sock);
-          }
-        }  
+  ws.on('message', msg => {
+    const data = JSON.parse(msg)
 
-        clientesConectados.set(ws, nome);
-        //console.log(`Usuário logou: ${nome}`);
-      }
-      if(data.type == "log-out"){
-        const nome = data.nome;
+    if (data.type === 'login') {
+      const nome = data.nome
 
-        for (const [sock, user] of clientesConectados.entries()) {
-          if (user === nome) {
-            sock.close();
-            clientesConectados.delete(sock);
-          }
-        } 
-
-        console.log(`Usuário deslogou: ${nome}`);
-      }
-      
-      if (data.type === 'desafio') {
-        const wsAlvo = getWsByNome(data.para);
-        //console.log(data.de)
-        //console.log(data.para)
-        if (wsAlvo) {
-          wsAlvo.send(JSON.stringify({
-            type: 'convite',
-            de: data.de
-          }));
+      for (const [sock, user] of clientesConectados.entries()) {
+        if (user === nome) {
+          sock.close()
+          clientesConectados.delete(sock)
         }
       }
 
-      if (data.type === 'respostaDesafio') {
-        const wsDesafiante = getWsByNome(data.para);
-        if (wsDesafiante) {
-          wsDesafiante.send(JSON.stringify({
+      clientesConectados.set(ws, nome)
+      //console.log(`Usuário logou: ${nome}`);
+    }
+    if (data.type == 'log-out') {
+      const nome = data.nome
+
+      for (const [sock, user] of clientesConectados.entries()) {
+        if (user === nome) {
+          sock.close()
+          clientesConectados.delete(sock)
+        }
+      }
+
+      console.log(`Usuário deslogou: ${nome}`)
+    }
+
+    if (data.type === 'desafio') {
+      const wsAlvo = getWsByNome(data.para)
+      console.log('Desafio enviado de', data.de, 'para', data.para)
+      if (wsAlvo) {
+        wsAlvo.send(
+          JSON.stringify({
+            type: 'convite',
+            de: data.de,
+          })
+        )
+      } else {
+        // Se o jogador alvo não estiver online, notifica o desafiante
+        ws.send(
+          JSON.stringify({
+            type: 'respostaDesafio',
+            aceita: false,
+            com: data.para,
+          })
+        )
+      }
+    }
+
+    if (data.type === 'respostaDesafio') {
+      const wsDesafiante = getWsByNome(data.para)
+      console.log(
+        'Resposta do desafio:',
+        data.aceita ? 'aceito' : 'recusado',
+        'por',
+        data.de,
+        'para',
+        data.para
+      )
+      if (wsDesafiante) {
+        wsDesafiante.send(
+          JSON.stringify({
             type: 'respostaDesafio',
             aceita: data.aceita,
-            com: data.de
-          }));
-        }
+            com: data.de,
+          })
+        )
       }
+    }
 
-      if (data.type === 'msg-env-game') {
-        
-        console.log(`Mensagem privada de ${data.de} para ${data.para}: ${data.valor}`);
+    if (data.type === 'msg-env-game') {
+      console.log(`Mensagem privada de ${data.de} para ${data.para}: ${data.valor}`)
 
-        const destinatario = getWsByNome(data.para);
-        //console.log(`Destinatário resolvido: ${destinatario ? 'sim' : 'não'}`);
-        //console.log(`Destino WebSocket encontrado: ${clientesConectados.get(destinatario)}`);
-        if (destinatario.readyState === WebSocket.OPEN) {
-          destinatario.send(JSON.stringify({
+      const destinatario = getWsByNome(data.para)
+      //console.log(`Destinatário resolvido: ${destinatario ? 'sim' : 'não'}`);
+      //console.log(`Destino WebSocket encontrado: ${clientesConectados.get(destinatario)}`);
+      if (destinatario.readyState === WebSocket.OPEN) {
+        destinatario.send(
+          JSON.stringify({
             type: 'msg-receb-game',
             de: data.de,
-            valor: data.valor
-          }));
-        } else {
-          console.log("WebSocket do destinatário está fechado.");
-        }
+            valor: data.valor,
+          })
+        )
+      } else {
+        console.log('WebSocket do destinatário está fechado.')
       }
-      if (data.type === 'msg-end-game') {
-        
-        const destinatario = getWsByNome(data.para);
-        //console.log(`Destinatário resolvido: ${destinatario ? 'sim' : 'não'}`);
-        //console.log(`Destino WebSocket encontrado: ${clientesConectados.get(destinatario)}`);
-        if (destinatario.readyState === WebSocket.OPEN) {
-          destinatario.send(JSON.stringify({
+    }
+    if (data.type === 'msg-end-game') {
+      const destinatario = getWsByNome(data.para)
+      //console.log(`Destinatário resolvido: ${destinatario ? 'sim' : 'não'}`);
+      //console.log(`Destino WebSocket encontrado: ${clientesConectados.get(destinatario)}`);
+      if (destinatario.readyState === WebSocket.OPEN) {
+        destinatario.send(
+          JSON.stringify({
             type: 'msg-end-game',
             de: data.de,
-          }));
-        } else {
-          console.log("WebSocket do destinatário está fechado.");
-        }
+          })
+        )
+      } else {
+        console.log('WebSocket do destinatário está fechado.')
       }
-      
-      broadcastListaUsuarios();
-
-    });
-
-    ws.on('close', () => {
-      clientesConectados.delete(ws); // remove da lista
-      broadcastListaUsuarios(); // envia lista atualizada para os demais
-    });
-
-  });
-
-  function broadcastListaUsuarios() {
-    const nomes = Array.from(clientesConectados.values());
-  
-    const mensagem = {
-      type: 'lista-usuarios',
-      usuarios: nomes
-    };
-  
-    const json = JSON.stringify(mensagem);
-  
-    clientesConectados.forEach((_, clienteSocket) => {
-      if (clienteSocket.readyState === WebSocket.OPEN) {
-        clienteSocket.send(json);
-      }
-    });
-  }
-
-  function getWsByNome(nome) {
-    for (const [ws, nomeCliente] of clientesConectados.entries()) {
-      if (nomeCliente === nome) return ws;
     }
-    return null;
+
+    if (data.type === 'opponent-character') {
+      const targetWs = getWsByNome(data.para)
+      if (targetWs) {
+        console.log('Encaminhando personagem para:', data.para)
+        targetWs.send(
+          JSON.stringify({
+            type: 'opponent-character',
+            image: data.image,
+            index: data.index,
+          })
+        )
+      } else {
+        console.log('Oponente não encontrado:', data.para)
+      }
+    }
+
+    broadcastListaUsuarios()
+  })
+
+  ws.on('close', () => {
+    clientesConectados.delete(ws) // remove da lista
+    broadcastListaUsuarios() // envia lista atualizada para os demais
+  })
+})
+
+function broadcastListaUsuarios() {
+  const nomes = Array.from(clientesConectados.values())
+
+  const mensagem = {
+    type: 'lista-usuarios',
+    usuarios: nomes,
   }
+
+  const json = JSON.stringify(mensagem)
+
+  clientesConectados.forEach((_, clienteSocket) => {
+    if (clienteSocket.readyState === WebSocket.OPEN) {
+      clienteSocket.send(json)
+    }
+  })
+}
+
+function getWsByNome(nome) {
+  for (const [ws, nomeCliente] of clientesConectados.entries()) {
+    if (nomeCliente === nome) return ws
+  }
+  return null
+}
