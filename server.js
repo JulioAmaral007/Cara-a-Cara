@@ -379,20 +379,13 @@ app.post('/game/update', requireAuth, async (req, res) => {
     let { winner, loser } = req.body
 
     let [winnerUpdate, loserUpdate] = await Promise.all([
-      User.findOneAndUpdate(
-        { username: winner },
-        { $inc: { victories: 1, gamesPlayed: 1 } },
-        { new: true }
-      ),
+      User.findOneAndUpdate({ username: winner }, { $inc: { victories: 1, gamesPlayed: 1 } }, { new: true }),
       User.findOneAndUpdate({ username: loser }, { $inc: { gamesPlayed: 1 } }, { new: true }),
     ])
 
     if (!winnerUpdate || !loserUpdate) {
       if (winnerUpdate) {
-        await User.findOneAndUpdate(
-          { username: winner },
-          { $inc: { victories: -1, gamesPlayed: -1 } }
-        )
+        await User.findOneAndUpdate({ username: winner }, { $inc: { victories: -1, gamesPlayed: -1 } })
       }
       if (loserUpdate) {
         await User.findOneAndUpdate({ username: loser }, { $inc: { gamesPlayed: -1 } })
@@ -673,14 +666,7 @@ wss.on('connection', ws => {
 
     if (data.type === 'respostaDesafio') {
       const wsDesafiante = getWsByNome(data.para)
-      console.log(
-        'Resposta do desafio:',
-        data.aceita ? 'aceito' : 'recusado',
-        'por',
-        data.de,
-        'para',
-        data.para
-      )
+      console.log('Resposta do desafio:', data.aceita ? 'aceito' : 'recusado', 'por', data.de, 'para', data.para)
       if (wsDesafiante) {
         wsDesafiante.send(
           JSON.stringify({

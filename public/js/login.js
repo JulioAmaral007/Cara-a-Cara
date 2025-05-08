@@ -57,8 +57,8 @@ document.addEventListener('DOMContentLoaded', () => {
       passwordInput.value = ''
       errorMessage.textContent = ''
       errorMessage.classList.remove('show') // Remove a classe 'show'
-      
-      sessionStorage.setItem("usuario", username);//Guarda nome do usuário exibir em lobby
+
+      sessionStorage.setItem('usuario', username) //Guarda nome do usuário exibir em lobby
 
       // Redireciona para o lobby após login bem-sucedido
       window.location.href = 'lobby.html'

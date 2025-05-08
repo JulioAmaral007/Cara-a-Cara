@@ -158,9 +158,7 @@ async function updateUserInfo() {
     statGames.textContent = data.player.gamesPlayed
 
     const winRate =
-      data.player.gamesPlayed > 0
-        ? ((data.player.victories / data.player.gamesPlayed) * 100).toFixed(1)
-        : 0
+      data.player.gamesPlayed > 0 ? ((data.player.victories / data.player.gamesPlayed) * 100).toFixed(1) : 0
 
     statWinrate.textContent = `${winRate}%`
   } catch (error) {
@@ -171,7 +169,8 @@ async function updateUserInfo() {
 
 // Simula atualização da lista
 refreshPlayersBtn.addEventListener('click', () => {
-  atualizarListaUsuarios(data.usuarios.filter(nome => nome !== meuID))
+  // Solicita uma nova lista de usuários ao servidor
+  ws.send(JSON.stringify({ type: 'get-users' }))
 })
 
 // Simula logout

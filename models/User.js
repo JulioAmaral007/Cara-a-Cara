@@ -28,8 +28,8 @@ const UserSchema = new mongoose.Schema(
     },
     isOnline: {
       type: Boolean,
-      default: false
-    }
+      default: false,
+    },
   },
   {
     timestamps: true,

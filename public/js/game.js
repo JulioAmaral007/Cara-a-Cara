@@ -3,6 +3,8 @@ const ws = new WebSocket('ws://localhost:3000/')
 
 const meuID = sessionStorage.getItem('usuario')
 const opponent = sessionStorage.getItem('oponente')
+let vencedor = null
+let perdedor = null
 
 ws.onopen = () => {
   if (meuID) {
@@ -64,17 +66,13 @@ ws.onmessage = event => {
                 type: 'msg-end-game',
                 de: meuID,
                 para: opponent,
-                winner: data.de,
               })
             )
 
-            // Mostra mensagem para o perdedor
-            alert('Ops! Seu oponente acertou o personagem!')
-            // Redireciona para o lobby após um pequeno delay
-            setTimeout(() => {
-              window.location.href = 'lobby.html'
-              clearGameCharacter()
-            }, 2000)
+            alert('Você perdeu o jogo. Voltando para o lobby...')
+
+            clearGameCharacter()
+            window.location.href = 'lobby.html'
           })
           .catch(error => {
             console.error('Erro ao atualizar estatísticas:', error)
@@ -85,20 +83,15 @@ ws.onmessage = event => {
       }
     }
   }
+
+  // Mensagem de fim de jogo
   if (data.type === 'msg-end-game') {
-    if (data.winner) {
-      // Se eu sou o vencedor (data.de é o vencedor e data.de === meuID)
-      if (data.de === meuID) {
-        alert('Parabéns! Você acertou o personagem!')
-        clearGameCharacter()
-      } else {
-        alert(`${data.de} acertou o personagem! Jogo encerrado, voltando para o lobby...`)
-        clearGameCharacter()
-      }
+    if (data.de !== meuID) {
+      alert('Parabéns! Você venceu o jogo.')
     } else {
       alert(`${data.de} saiu do jogo. Jogo encerrado, voltando para o lobby...`)
-      clearGameCharacter()
     }
+    clearGameCharacter()
     window.location.href = 'lobby.html'
   }
 }
