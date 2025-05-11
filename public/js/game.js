@@ -1,10 +1,14 @@
+// Check de sessão: só permite acesso se estiver logado
+if (!sessionStorage.getItem('usuario')) {
+  alert('Você precisa estar logado para acessar o jogo.')
+  window.location.href = 'login.html' // ou o caminho da sua página de login
+}
+
 //Websocket Setup
 const ws = new WebSocket('ws://localhost:3000/')
 
 const meuID = sessionStorage.getItem('usuario')
 const opponent = sessionStorage.getItem('oponente')
-let vencedor = null
-let perdedor = null
 
 ws.onopen = () => {
   if (meuID) {
