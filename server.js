@@ -698,13 +698,13 @@ wss.on('connection', ws => {
     }
     if (data.type === 'msg-end-game') {
       const destinatario = getWsByNome(data.para)
-      //console.log(`Destinatário resolvido: ${destinatario ? 'sim' : 'não'}`);
-      //console.log(`Destino WebSocket encontrado: ${clientesConectados.get(destinatario)}`);
       if (destinatario.readyState === WebSocket.OPEN) {
         destinatario.send(
           JSON.stringify({
             type: 'msg-end-game',
             de: data.de,
+            winner: data.winner,
+            loser: data.loser,
           })
         )
       } else {

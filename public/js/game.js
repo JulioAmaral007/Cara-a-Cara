@@ -58,7 +58,6 @@ ws.onmessage = event => {
       const guessedCharacter = guessMatch[1]
       const secretCharacterIndex = Number.parseInt(sessionStorage.getItem('secretCharacterIndex'))
       const correctCharacter = characterNames[secretCharacterIndex]
-      console.log(guessedCharacter, correctCharacter)
 
       if (guessedCharacter.toLowerCase() === correctCharacter.toLowerCase()) {
         // Atualiza as estatísticas no servidor
@@ -70,6 +69,8 @@ ws.onmessage = event => {
                 type: 'msg-end-game',
                 de: meuID,
                 para: opponent,
+                winner: data.de, // Quem acertou é o vencedor
+                loser: meuID, // Quem teve o personagem adivinhado é o perdedor
               })
             )
 
@@ -83,18 +84,49 @@ ws.onmessage = event => {
             alert('Erro ao atualizar estatísticas do jogo')
           })
       } else {
-        alert('Ops! Personagem errado. Tente novamente!')
+        // Atualiza as estatísticas no servidor
+        updateGameStats(meuID, data.de)
+          .then(() => {
+            // Envia mensagem de fim de jogo para o oponente
+            ws.send(
+              JSON.stringify({
+                type: 'msg-end-game',
+                de: meuID,
+                para: opponent,
+                winner: meuID, // Quem defendeu é o vencedor
+                loser: data.de, // Quem errou é o perdedor
+              })
+            )
+
+            alert('Parabéns! Você venceu o jogo, o oponente errou seu personagem.')
+
+            clearGameCharacter()
+            window.location.href = 'lobby.html'
+          })
+          .catch(error => {
+            console.error('Erro ao atualizar estatísticas:', error)
+            alert('Erro ao atualizar estatísticas do jogo')
+          })
       }
     }
   }
 
   // Mensagem de fim de jogo
   if (data.type === 'msg-end-game') {
-    if (data.de !== meuID) {
-      alert('Parabéns! Você venceu o jogo.')
+    console.log('Mensagem de fim de jogo recebida:', data)
+
+    // Verifica se os campos winner e loser existem
+    if (data.winner && data.loser) {
+      if (data.winner !== meuID) {
+        alert('Você perdeu o jogo. Voltando para o lobby...')
+      } else if (data.loser !== meuID) {
+        alert('Parabéns! Você venceu o jogo.')
+      }
     } else {
-      alert(`${data.de} saiu do jogo. Jogo encerrado, voltando para o lobby...`)
+      // Se não tiver os campos winner e loser, é uma mensagem de saída do jogo
+      alert('Jogo encerrado. Voltando para o lobby...')
     }
+
     clearGameCharacter()
     window.location.href = 'lobby.html'
   }
